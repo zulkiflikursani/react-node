@@ -61,8 +61,8 @@ app.get("/products/:id", (req, res) => {
 
 // simpan poduk
 app.post("/products", (req, res) => {
-  const { nama, hjual, hbeli } = req.body;
-  const sql = `INSERT INTO PRODUCT VALUES('','${nama}',${hbeli},${hjual},now())`;
+  const { nama, kat, hjual, hbeli } = req.body;
+  const sql = `INSERT INTO PRODUCT VALUES('','${nama}','${kat}',${hbeli},${hjual},now())`;
 
   con.query(sql, function (err, result) {
     if (err) throw err;
@@ -72,8 +72,8 @@ app.post("/products", (req, res) => {
 // update produk
 app.patch("/products/:id", (req, res) => {
   const id = req.params.id;
-  const { nama, hjual, hbeli } = req.body;
-  const sql = `UPDATE PRODUCT SET NAMA='${nama}',HJUAL=${hjual},HBELI=${hbeli},CREATEAT=NOW() WHERE ID=${id}`;
+  const { nama, kat, hjual, hbeli } = req.body;
+  const sql = `UPDATE PRODUCT SET NAMA='${nama}',KAT='${kat}',HJUAL=${hjual},HBELI=${hbeli},CREATEAT=NOW() WHERE ID=${id}`;
   con.query(sql, function (err, result) {
     if (err) throw err;
     res.status(200).send(result);
@@ -83,6 +83,82 @@ app.patch("/products/:id", (req, res) => {
 app.delete("/products/:id", (req, res) => {
   const id = req.params.id;
   const sql = `DELETE FROM PRODUCT WHERE ID='${id}'`;
+  con.query(sql, function (err, result) {
+    if (err) throw err;
+    res.status(200).send(result);
+  });
+});
+
+app.get("/penjualan", (req, res) => {
+  const id = req.params.id;
+  const sql = `SELECT * FROM PENJUALAN`;
+  con.query(sql, function (err, result) {
+    if (err) throw err;
+    res.status(200).send(result);
+  });
+});
+
+app.get("/penjualan/:kode_penjualan", (req, res) => {
+  const kode_penjualan = req.params.kode_penjualan;
+  const sql = `SELECT * FROM PENJUALAN WHERE KODE_PENJUALAN='${kode_penjualan}'`;
+  con.query(sql, function (err, result) {
+    if (err) throw err;
+    res.status(200).send(result);
+  });
+});
+
+const makeid = (length) => {
+  let result = "";
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const charactersLength = characters.length;
+  let counter = 0;
+  while (counter < length) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    counter += 1;
+  }
+  return result;
+};
+
+app.post("/penjualan", (req, res) => {
+  let kode_penjualan = makeid(5);
+
+  const { data } = req.body;
+  var temp = "";
+  data.map((data) => {
+    temp += `('','${data.nama}',${data.hjual},'${data.id}','${kode_penjualan}',${data.qty},now()),`;
+  });
+  const sql =
+    `INSERT INTO PENJUALAN (id,nama_barang,hjual,kode_barang,kode_penjualan,qty,createAt) VALUES` +
+    temp.substring(0, temp.length - 1);
+  // res.send(sql);
+  con.query(sql, function (err, result) {
+    if (err) throw err;
+    res.status(201).send(result);
+  });
+});
+
+app.delete("/penjualan/:kode_penjualan", (req, res) => {
+  const kode_penjualan = req.params.kode_penjualan;
+  const sql = `DELETE FROM PENJUALAN WHERE KODE_PENJUALAN='${kode_penjualan}'`;
+  con.query(sql, function (err, result) {
+    if (err) throw err;
+    res.status(200).send(result);
+  });
+});
+
+app.get("/laporanpenjualan", (req, res) => {
+  const mulai = req.query.mulai;
+  const sampai = req.query.sampai;
+  const sql = `select penjualan.nama_barang,
+  penjualan.hjual,
+  FORMAT (penjualan.createAt, 'dd-MM-yy') as 'dd-mm-yyyy',
+  penjualan.kode_barang,
+  penjualan.kode_penjualan,
+  penjualan.qty,
+  product.hbeli,
+  penjualan.id from penjualan LEFT JOIN product on penjualan.kode_barang=product.id where  CAST(penjualan.createAt as date) BETWEEN '${mulai}' and '${sampai}'`;
+  // res.send(sql);
   con.query(sql, function (err, result) {
     if (err) throw err;
     res.status(200).send(result);
