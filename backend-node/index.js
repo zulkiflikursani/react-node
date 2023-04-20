@@ -6,11 +6,11 @@ const cors = require("cors");
 
 const app = express();
 const hostname = "localhost";
-const port = "5000";
+const port = "3000";
 
 app.use(
   cors({
-    origin: "http://localhost:5000",
+    origin: "http://localhost:3000",
   })
 );
 app.use(bodyParser.json());
